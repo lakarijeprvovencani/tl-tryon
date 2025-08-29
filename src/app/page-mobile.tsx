@@ -21,10 +21,11 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedResult, setGeneratedResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1); // 1: Upload, 2: Select Product, 3: Preview, 4: Result
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Fetch products from our new API route
     const fetchProducts = async () => {
       try {
         const response = await fetch('/api/products');
@@ -46,9 +47,9 @@ export default function Home() {
       const reader = new FileReader();
       reader.onload = (e) => {
         setUserImage(e.target?.result as string);
-        setGeneratedResult(null);
+        setGeneratedResult(null); // Clear previous result on new image
         setError(null);
-        setCurrentStep(2);
+        setCurrentStep(2); // Move to product selection
       };
       reader.onerror = () => {
         setError("Failed to read the image file.");
@@ -59,7 +60,7 @@ export default function Home() {
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
-    setCurrentStep(3);
+    setCurrentStep(3); // Move to preview
   };
 
   const handleStartOver = () => {
@@ -102,7 +103,7 @@ export default function Home() {
 
       const result = await response.json();
       setGeneratedResult(result.data.generatedImage);
-      setCurrentStep(4);
+      setCurrentStep(4); // Move to result screen
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred during generation.');
@@ -139,20 +140,18 @@ export default function Home() {
         </nav>
 
         <div className="container mx-auto px-4 py-8 md:py-12">
-          {/* Hero Section - Hide when showing result */}
-          {currentStep !== 4 && (
-            <div className="text-center mb-8 md:mb-12">
-              <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-6">
-                <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                  Isprobaj pre kupovine
-                </span>
-              </h1>
-              <p className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                Naš AI ti omogućava da vidiš kako će garderoba izgledati baš na tebi. 
-                Dodaj svoju fotografiju i obuci Tia Lorens.
-              </p>
-            </div>
-          )}
+          {/* Hero Section */}
+          <div className="text-center mb-8 md:mb-12">
+            <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-6">
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                Isprobaj pre kupovine
+              </span>
+            </h1>
+            <p className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Naš AI ti omogućava da vidiš kako će garderoba izgledati baš na tebi. 
+              Dodaj svoju fotografiju i obuci Tia Lorens.
+            </p>
+          </div>
 
           {/* Step-by-Step Mobile Flow */}
           <div className="max-w-lg mx-auto">
@@ -328,12 +327,19 @@ export default function Home() {
                       disabled={isGenerating}
                       className="w-full py-4 px-8 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-bold rounded-2xl text-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
-                      <div className="flex items-center justify-center space-x-3">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>Kreiraj model</span>
-                      </div>
+                      {isGenerating ? (
+                        <div className="flex items-center justify-center space-x-3">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          <span>Kreiram model...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center space-x-3">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>Kreiraj model</span>
+                        </div>
+                      )}
                     </button>
                     
                     <button
@@ -351,6 +357,20 @@ export default function Home() {
             {currentStep === 4 && generatedResult && (
               <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
                 <div className="p-6 md:p-8">
+                  <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                      🎉 Tvoj model je spreman!
+                    </h2>
+                    <p className="text-gray-600">
+                      Evo kako ti stoji {selectedProduct?.name}
+                    </p>
+                  </div>
+
                   {/* Generated Image */}
                   <div className="mb-8">
                     <div className="bg-gray-100 rounded-2xl p-4 flex justify-center">
@@ -393,15 +413,20 @@ export default function Home() {
         </div>
       </main>
 
-      {/* CLEAN Loading Animation - NO spinning circles */}
+      {/* Fullscreen AI Generation Overlay */}
       {isGenerating && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center space-y-8 p-8">
-            <div className="w-24 h-24 mx-auto">
-              <div className="w-full h-full bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            <div className="relative">
+              <div className="w-24 h-24 mx-auto">
+                <div className="absolute inset-0 border-4 border-pink-200 rounded-full animate-ping"></div>
+                <div className="absolute inset-2 border-4 border-purple-200 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
+                <div className="absolute inset-4 border-4 border-pink-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
               </div>
             </div>
             
