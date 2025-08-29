@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     
     // Prepare the parts for the generation request
     const imagePart = dataUrlToPart(userImageBase64);
-    const textPrompt = `Create a photorealistic fashion image showing this person wearing a "${productName}". The clothing should fit naturally on their body. Keep the same person but change their clothing. Clean studio background with professional lighting.`;
+    const textPrompt = `Edit this image by changing only the clothing. Replace the current clothing with "${productName}". Keep the same person, same face, same pose, same background - only change the clothing to fit naturally on their body. This is a virtual try-on, so preserve everything except the clothes.`;
 
     // Call the Gemini API to generate content
     const response = await model.generateContent([textPrompt, imagePart]);
