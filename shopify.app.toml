@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "tia-lorens-virtual-tryon"
+client_id = ""
+application_url = "https://localhost:3001"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_products,read_product_listings"
+
+[auth]
+redirect_urls = [
+  "https://localhost:3001/auth/callback",
+  "https://localhost:3001/auth/shopify/callback",
+]
+
+[webhooks]
+api_version = "2023-10"
+
+[pos]
+embedded = false
+
+[[extensions]]
+type = "product_subscription"
+name = "virtual-tryon-button"
+handle = "virtual-tryon-button"
+
+[extensions.metafields]
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "https://tialorens.myshopify.com"

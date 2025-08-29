@@ -104,10 +104,12 @@ export default function Home() {
         <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">T</span>
-                </div>
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/assets/images/tia_logo.webp" 
+                  alt="Tia Lorens" 
+                  className="h-10 w-auto"
+                />
                 <span className="font-bold text-xl text-gray-800">Tia Lorens</span>
               </div>
               <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-600">
@@ -121,22 +123,99 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8 md:py-12">
           {/* Hero Section */}
           <div className="text-center mb-12 md:mb-16">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6">
-              Virtual Try-On
-              <span className="block bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                AI Tehnologija
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
+              <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                Isprobaj pre kupovine
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Isprobajte našu garderobu sa naprednom AI tehnologijom pre kupovine. 
-              Jednostavno dodajte svoju sliku i vidite kako vam stoji bilo koji proizvod.
+              Naš AI ti omogućava da vidiš kako će garderoba izgledati baš na tebi. 
+              Dodaj svoju fotografiju i obuci Tia Lorens.
             </p>
           </div>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Virtual Try-On Section */}
-            <div className="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
+          <div className="space-y-6 lg:space-y-8">
+            
+            {/* Step 1: Product Selection */}
+            {!selectedProduct && (
+              <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
+                <div className="p-6 md:p-8">
+                  <div className="flex items-center space-x-3 mb-8">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold">1</span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                      Odaberi šta želiš da isprobas iz naše kolekcije
+                    </h2>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {products.map((product) => (
+                      <div
+                        key={product.id}
+                        onClick={() => setSelectedProduct(product)}
+                        className="group p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 hover:shadow-md"
+                      >
+                        <div className="space-y-4">
+                          <div className="w-full h-32 md:h-40 bg-white rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors overflow-hidden">
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                          </div>
+                          
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-sm md:text-base mb-2">
+                              {product.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-600 mb-3 line-clamp-2">
+                              {product.description}
+                            </p>
+                            
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg md:text-xl font-bold text-gray-900">
+                                    {product.price.toLocaleString()} RSD
+                                  </span>
+                                  {product.originalPrice && (
+                                    <span className="text-sm text-gray-500 line-through">
+                                      {product.originalPrice.toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  {product.isOnSale && (
+                                    <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                                      Akcija
+                                    </span>
+                                  )}
+                                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    product.inStock 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {product.inStock ? 'Dostupno' : 'Rasprodato'}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <button className="px-4 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold rounded-xl text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                                Isprobaj
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Steps 2-4: Selected Product Flow */}
+            {selectedProduct && (
+              <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+                {/* Virtual Try-On Section */}
+                <div className="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
               <div className="p-6 md:p-8">
                 <div className="flex items-center space-x-3 mb-8">
                   <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -228,12 +307,38 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Step 2 - Select Product (when image uploaded but no product selected) */}
+                {userImage && !selectedProduct && (
+                  <div className="space-y-6 mt-8">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-yellow-600">2</span>
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">Izaberi proizvod iz kolekcije</h3>
+                    </div>
+                    
+                    <div className="p-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-2xl">👉</div>
+                        <div>
+                          <p className="text-lg font-semibold text-gray-800 mb-1">
+                            Odličo! Sada izaberi proizvod
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Klikni na bilo koji proizvod iz <strong>"Naša kolekcija"</strong> da vidiš kako ti stoji!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Generate Button */}
                 {userImage && selectedProduct && (
                   <div className="space-y-6 mt-8">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-gray-600">2</span>
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-green-600">2</span>
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900">Generiši svoj model</h3>
                     </div>
@@ -276,111 +381,69 @@ export default function Home() {
                       alt="Generated result"
                       className="w-full max-w-md mx-auto rounded-2xl shadow-lg"
                     />
-                    <p className="text-center text-sm text-gray-600 mt-4">
+                    <p className="text-center text-sm text-gray-600 mt-4 mb-6">
                       Evo kako vam stoji <strong>{selectedProduct?.name}</strong>!
                     </p>
+                    
+                    {/* Try Again Button */}
+                    <div className="text-center">
+                      <button
+                        onClick={() => {
+                          setGeneratedResult(null);
+                          setUserImage(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+                      >
+                        Isprobaj ponovo
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Products Section */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-              <div className="p-6 md:p-8">
-                <div className="flex items-center space-x-3 mb-8">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                    Naša kolekcija
-                  </h2>
-                </div>
-                
-                <div className="space-y-4">
-                  {products.map((product) => (
-                    <div
-                      key={product.id}
-                      onClick={() => setSelectedProduct(product)}
-                      className={`group p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                        selectedProduct?.id === product.id
-                          ? 'bg-gradient-to-r from-pink-100 to-purple-100 border-2 border-pink-300 shadow-lg'
-                          : 'bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-start space-x-4">
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors overflow-hidden">
-                          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-bold text-gray-900 text-sm md:text-base leading-tight">
-                              {product.name}
-                            </h3>
-                            {selectedProduct?.id === product.id && (
-                              <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <p className="text-xs md:text-sm text-gray-600 mb-3 line-clamp-2">
-                            {product.description}
-                          </p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg md:text-xl font-bold text-gray-900">
-                                  {product.price.toLocaleString()} RSD
-                                </span>
-                                {product.originalPrice && (
-                                  <span className="text-sm text-gray-500 line-through">
-                                    {product.originalPrice.toLocaleString()}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                {product.isOnSale && (
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                                    Akcija
-                                  </span>
-                                )}
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                  product.inStock 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {product.inStock ? 'Dostupno' : 'Rasprodato'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-3">
-                            <span className="text-xs text-gray-500 font-medium">
-                              {product.category}
+                {/* Selected Product Display */}
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 md:p-6 mb-8 border border-pink-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 text-lg">{selectedProduct.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{selectedProduct.category}</p>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xl font-bold text-gray-900">
+                            {selectedProduct.price.toLocaleString()} RSD
+                          </span>
+                          {selectedProduct.originalPrice && (
+                            <span className="text-sm text-gray-500 line-through">
+                              {selectedProduct.originalPrice.toLocaleString()} RSD
                             </span>
-                          </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                
-                {!selectedProduct && (
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
-                    <p className="text-sm text-blue-800 text-center">
-                      👆 Kliknite na proizvod da počnete sa virtual try-on
-                    </p>
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(null);
+                        setUserImage(null);
+                        setGeneratedResult(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl text-sm transition-all duration-300"
+                    >
+                      Promeni
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
@@ -402,13 +465,23 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold text-white">
                 Tia Lorens generiše tvoj model
               </h2>
               <p className="text-lg text-gray-300 max-w-md mx-auto">
                 AI tehnologija kreira personalizovan prikaz kako ti stoji {selectedProduct?.name}.
               </p>
+              
+              {/* Clothing Animation */}
+              <div className="flex items-center justify-center space-x-4 py-4">
+                <div className="animate-bounce" style={{animationDelay: '0s'}}>👕</div>
+                <div className="animate-bounce" style={{animationDelay: '0.2s'}}>👗</div>
+                <div className="animate-bounce" style={{animationDelay: '0.4s'}}>👖</div>
+                <div className="animate-bounce" style={{animationDelay: '0.6s'}}>👔</div>
+                <div className="animate-bounce" style={{animationDelay: '0.8s'}}>🧥</div>
+              </div>
+              
               <div className="flex items-center justify-center space-x-2 text-pink-400">
                 <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>

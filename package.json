@@ -11,6 +11,8 @@
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
+    "@shopify/admin-api-client": "^1.1.1",
+    "@shopify/shopify-api": "^11.14.1",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"
