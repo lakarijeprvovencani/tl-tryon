@@ -3,14 +3,11 @@
   This block displays a virtual try-on form and product information
 {% endcomment %}
 
-{% assign api_key = "AIzaSyBbf1j8tO10dxKh4iwg5ueYqm4uyUwJUK0" %}
-{% assign store_domain = "075997-f4.myshopify.com" %}
+{% comment %} No API keys needed - using server environment variables {% endcomment %}
 {% assign widget_title = block.settings.widget_title | default: 'Virtual Try-On' %}
 {% assign widget_description = block.settings.widget_description | default: 'Uploaduj svoju sliku da vidiš kako ti stoji ovaj proizvod!' %}
 
 <div id="tl-vto" class="virtual-tryon-widget" 
-     data-api-key="{{ api_key | escape }}"
-     data-store-domain="{{ store_domain | escape }}"
      data-product-id="{{ product.id }}"
      data-product-title="{{ product.title | escape }}"
      data-product-image="{{ product.featured_image | image_url }}"
@@ -25,21 +22,46 @@
     
     <div class="tryon-form">
       <div class="upload-section">
-        <label for="photo-upload-{{ block.id }}" class="upload-label">
-          <span class="upload-icon">📷</span>
-          <span class="upload-text">Uploaduj svoju sliku</span>
-        </label>
-        <input type="file" 
-               id="photo-upload-{{ block.id }}" 
-               accept="image/*" 
-               class="photo-input" 
-               style="display: none;">
+        <div class="upload-row">
+          <div class="upload-column">
+            <label for="person-upload-{{ block.id }}" class="upload-label">
+              <span class="upload-icon">👤</span>
+              <span class="upload-text">Uploaduj svoju sliku</span>
+            </label>
+            <input type="file" 
+                   id="person-upload-{{ block.id }}" 
+                   accept="image/*" 
+                   class="photo-input" 
+                   style="display: none;">
+          </div>
+          
+          <div class="upload-column">
+            <label for="garment-upload-{{ block.id }}" class="upload-label">
+              <span class="upload-icon">👕</span>
+              <span class="upload-text">Uploaduj sliku garderobe (opciono)</span>
+            </label>
+            <input type="file" 
+                   id="garment-upload-{{ block.id }}" 
+                   accept="image/*" 
+                   class="photo-input" 
+                   style="display: none;">
+          </div>
+        </div>
       </div>
       
       <div class="preview-section" style="display: none;">
-        <img id="preview-image-{{ block.id }}" class="preview-image" alt="Photo preview" width="300" height="300">
+        <div class="preview-images">
+          <div class="preview-item">
+            <label>Vaša slika:</label>
+            <img id="person-preview-{{ block.id }}" class="preview-image" alt="Person preview" width="200" height="200">
+          </div>
+          <div class="preview-item" id="garment-preview-container-{{ block.id }}" style="display: none;">
+            <label>Garderoba:</label>
+            <img id="garment-preview-{{ block.id }}" class="preview-image" alt="Garment preview" width="200" height="200">
+          </div>
+        </div>
         <button type="button" class="try-on-btn" onclick="startVirtualTryOn('{{ block.id }}')">
-          Probaj proizvod
+          Isprobaj
         </button>
       </div>
       
@@ -97,6 +119,19 @@
   margin-bottom: 2rem;
 }
 
+.upload-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.upload-column {
+  flex: 1;
+  min-width: 200px;
+  max-width: 250px;
+}
+
 .upload-label {
   display: inline-block;
   padding: 1rem 2rem;
@@ -119,6 +154,25 @@
 .preview-section {
   text-align: center;
   margin-bottom: 2rem;
+}
+
+.preview-images {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.preview-item {
+  text-align: center;
+}
+
+.preview-item label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #333;
 }
 
 .preview-image {
@@ -195,13 +249,12 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Function to initialize the widget
+function initializeWidget() {
   // Konfiguracija widget-a
   const el = document.getElementById('tl-vto');
   if (el) {
     const cfg = {
-      apiKey: el.dataset.apiKey,
-      storeDomain: el.dataset.storeDomain,
       productId: el.dataset.productId,
       title: el.dataset.productTitle,
       image: el.dataset.productImage,
@@ -210,111 +263,174 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   const blockId = '{{ block.id }}';
-  const fileInput = document.getElementById(`photo-upload-${blockId}`);
-  const previewSection = document.querySelector(`#preview-image-${blockId}`).parentElement;
+  const personFileInput = document.getElementById(`person-upload-${blockId}`);
+  const garmentFileInput = document.getElementById(`garment-upload-${blockId}`);
+  const previewSection = document.querySelector(`.preview-section`);
   const resultSection = document.querySelector(`.result-section`);
   
-  fileInput.addEventListener('change', function(e) {
+  // Handle person image upload
+  personFileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = function(e) {
-        const previewImg = document.getElementById(`preview-image-${blockId}`);
+        const previewImg = document.getElementById(`person-preview-${blockId}`);
         previewImg.src = e.target.result;
         previewSection.style.display = 'block';
       };
       reader.readAsDataURL(file);
     }
   });
-});
+  
+  // Handle garment image upload
+  garmentFileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewImg = document.getElementById(`garment-preview-${blockId}`);
+        previewImg.src = e.target.result;
+        document.getElementById(`garment-preview-container-${blockId}`).style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', initializeWidget);
+
+// Initialize on Shopify section load
+document.addEventListener('shopify:section:load', initializeWidget);
+
+// Initialize on Shopify block select
+document.addEventListener('shopify:block:select', initializeWidget);
 
 function startVirtualTryOn(blockId) {
   const widget = document.querySelector(`[data-product-id]`);
-  const apiKey = widget.dataset.apiKey;
-  const storeDomain = widget.dataset.storeDomain;
   const productId = widget.dataset.productId;
   const variantId = widget.dataset.variantId;
   
-  // API ključ i store domain su hardcoded, ne treba proveravati
+  const personFileInput = document.getElementById(`person-upload-${blockId}`);
+  const garmentFileInput = document.getElementById(`garment-upload-${blockId}`);
   
-  const fileInput = document.getElementById(`photo-upload-${blockId}`);
-  const file = fileInput.files[0];
+  const personFile = personFileInput.files[0];
   
-  if (!file) {
-    alert('Molimo uploadujte sliku prvo.');
+  if (!personFile) {
+    alert('Molimo uploadujte svoju sliku prvo.');
     return;
   }
   
   // Show loading state
-  const tryOnBtn = document.querySelector(`#preview-image-${blockId}`).nextElementSibling;
+  const tryOnBtn = document.querySelector('.try-on-btn');
   const originalText = tryOnBtn.textContent;
   tryOnBtn.textContent = 'Obrađujem...';
   tryOnBtn.disabled = true;
   
-  // Convert image to base64 for easier transmission
+  // Create FormData for multipart upload
+  const formData = new FormData();
+  formData.append('personImage', personFile);
+  
+  // Add garment image if provided
+  const garmentFile = garmentFileInput.files[0];
+  if (garmentFile) {
+    formData.append('garmentImage', garmentFile);
+  }
+  
+  // Log product context for debugging
+  console.log('Product context:', {
+    productId: productId,
+    variantId: variantId,
+    title: widget.dataset.productTitle,
+    image: widget.dataset.productImage
+  });
+  
+  // Call Netlify function
+  const endpoint = 'https://quiet-maamoul-71d10e.netlify.app/.netlify/functions/tryon';
+  
+  // Convert FormData to base64 for Netlify function
+  const personFile = personFileInput.files[0];
+  const garmentFile = garmentFileInput.files[0];
+  
   const reader = new FileReader();
   reader.onload = function(e) {
-    const base64Image = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
+    const personBase64 = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
     
-    // Create form data as URL encoded
-    const formData = new URLSearchParams();
-    formData.append('photo', base64Image);
-    formData.append('productId', productId);
-    formData.append('variantId', variantId);
-    formData.append('apiKey', apiKey);
-    formData.append('storeDomain', storeDomain);
+    let garmentBase64 = null;
+    if (garmentFile) {
+      const garmentReader = new FileReader();
+      garmentReader.onload = function(e2) {
+        garmentBase64 = e2.target.result.split(',')[1];
+        sendToNetlify(personBase64, garmentBase64);
+      };
+      garmentReader.readAsDataURL(garmentFile);
+    } else {
+      sendToNetlify(personBase64, null);
+    }
+  };
+  
+  function sendToNetlify(personBase64, garmentBase64) {
+    const payload = {
+      personImage: personBase64,
+      garmentImage: garmentBase64
+    };
     
-    const endpoint = 'https://quiet-maamoul-71d10e.netlify.app/.netlify/functions/generate';
     fetch(endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: formData
+      body: JSON.stringify(payload)
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Backend response:', data);
-        console.log('Generated image length:', data.generatedImage ? data.generatedImage.length : 'undefined');
-        console.log('Result URL:', data.resultUrl);
-        
-        if (data.success) {
-          const resultImg = document.getElementById(`result-image-${blockId}`);
-          
-          // Check if we have a real generated image
-          if (data.generatedImage && data.generatedImage.length > 100) {
-            // Use the real generated image from Gemini
-            resultImg.src = `data:image/jpeg;base64,${data.generatedImage}`;
-            console.log('Using real AI-generated image!');
-          } else if (data.resultUrl) {
-            // Fallback to resultUrl if no generated image
-            resultImg.src = data.resultUrl;
-            console.log('Using fallback resultUrl');
-          } else {
-            console.error('No image data received:', data);
-            alert('Nije primljena slika od AI-a. Pokušaj ponovo.');
-          }
-          
-          document.querySelector('.result-section').style.display = 'block';
-          document.querySelector('.preview-section').style.display = 'none';
-          tryOnBtn.textContent = originalText;
-          tryOnBtn.disabled = false;
-        } else {
-          alert('Greška: ' + data.message);
-          tryOnBtn.textContent = originalText;
-          tryOnBtn.disabled = false;
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errorData => {
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        });
+      }
+      return response.text(); // Get base64 string
+    })
+    .then(base64Data => {
+      console.log('Generated image base64 length:', base64Data.length);
+      
+      // Create data URL for the generated image
+      const imageUrl = `data:image/png;base64,${base64Data}`;
+      const resultImg = document.getElementById(`result-image-${blockId}`);
+      resultImg.src = imageUrl;
+      
+      // Show result section
+      document.querySelector('.result-section').style.display = 'block';
+      document.querySelector('.preview-section').style.display = 'none';
+      
+      // Reset button state
+      tryOnBtn.textContent = originalText;
+      tryOnBtn.disabled = false;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      
+      // Show inline error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = `Greška: ${error.message}`;
+      errorDiv.style.color = 'red';
+      errorDiv.style.marginTop = '10px';
+      errorDiv.style.fontSize = '14px';
+      
+      // Insert error message after the button
+      tryOnBtn.parentNode.insertBefore(errorDiv, tryOnBtn.nextSibling);
+      
+      // Remove error message after 5 seconds
+      setTimeout(() => {
+        if (errorDiv.parentNode) {
+          errorDiv.parentNode.removeChild(errorDiv);
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Došlo je do greške prilikom obrade zahteva.');
-        tryOnBtn.textContent = originalText;
-        tryOnBtn.disabled = false;
-      });
-  };
-  
-  // Start reading the file
-  reader.readAsDataURL(file);
+      }, 5000);
+      
+      // Reset button state
+      tryOnBtn.textContent = originalText;
+      tryOnBtn.disabled = false;
+    });
 }
 
 function downloadResult(blockId) {
@@ -326,13 +442,21 @@ function downloadResult(blockId) {
 }
 
 function resetTryOn(blockId) {
-  const fileInput = document.getElementById(`photo-upload-${blockId}`);
-  const previewSection = document.querySelector(`#preview-image-${blockId}`).parentElement;
+  const personFileInput = document.getElementById(`person-upload-${blockId}`);
+  const garmentFileInput = document.getElementById(`garment-upload-${blockId}`);
+  const previewSection = document.querySelector(`.preview-section`);
   const resultSection = document.querySelector(`.result-section`);
+  const garmentPreviewContainer = document.getElementById(`garment-preview-container-${blockId}`);
   
-  fileInput.value = '';
+  personFileInput.value = '';
+  garmentFileInput.value = '';
   previewSection.style.display = 'none';
   resultSection.style.display = 'none';
+  garmentPreviewContainer.style.display = 'none';
+  
+  // Clear any error messages
+  const errorMessages = document.querySelectorAll('.error-message');
+  errorMessages.forEach(msg => msg.remove());
 }
 </script>
 

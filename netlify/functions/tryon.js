@@ -1,5 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Hardcoded configuration for now
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
@@ -7,31 +6,67 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-image-preview
 const GARMENT_DESC = "black plush tracksuit (jacket + pants)"; // Hardcoded for now
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-export async function POST(request: NextRequest) {
+exports.handler = async (event, context) => {
+  // Handle CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': event.headers.origin || '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      },
+      body: '',
+    };
+  }
+
+  // Only allow POST
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: {
+        'Access-Control-Allow-Origin': event.headers.origin || '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
+
   try {
     // Parse multipart form data
-    const formData = await request.formData();
-    const personImage = formData.get('personImage') as File;
-    const garmentImage = formData.get('garmentImage') as File | null;
+    const formData = event.body;
+    
+    // For now, we'll use a simple approach with base64 data
+    // In production, you'd want to use a proper multipart parser
+    let personImageBase64, garmentImageBase64;
+    
+    try {
+      const parsed = JSON.parse(formData);
+      personImageBase64 = parsed.personImage;
+      garmentImageBase64 = parsed.garmentImage;
+    } catch (e) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': event.headers.origin || '*',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Invalid JSON data' }),
+      };
+    }
 
     // Validation
-    if (!personImage) {
-      return NextResponse.json(
-        { error: 'Person image is required' },
-        { status: 400 }
-      );
+    if (!personImageBase64) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Access-Control-Allow-Origin': event.headers.origin || '*',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Person image is required' }),
+      };
     }
-
-    if (personImage.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'Person image size exceeds 10MB limit' },
-        { status: 400 }
-      );
-    }
-
-    // Convert person image to base64
-    const personImageBuffer = await personImage.arrayBuffer();
-    const personImageBase64 = Buffer.from(personImageBuffer).toString('base64');
 
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -60,20 +95,17 @@ This is an EDIT operation - preserve the original image structure and only modif
       {
         inlineData: {
           data: personImageBase64,
-          mimeType: personImage.type || 'image/jpeg'
+          mimeType: 'image/jpeg'
         }
       }
     ];
 
     // Add garment image if provided
-    if (garmentImage && garmentImage.size <= MAX_FILE_SIZE) {
-      const garmentImageBuffer = await garmentImage.arrayBuffer();
-      const garmentImageBase64 = Buffer.from(garmentImageBuffer).toString('base64');
-      
+    if (garmentImageBase64) {
       imageParts.push({
         inlineData: {
           data: garmentImageBase64,
-          mimeType: garmentImage.type || 'image/jpeg'
+          mimeType: 'image/jpeg'
         }
       });
     }
@@ -100,7 +132,7 @@ This is an EDIT operation - preserve the original image structure and only modif
         response = await result.response;
         break; // Success, exit retry loop
         
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Gemini API attempt ${retryCount + 1} failed:`, error);
         
         if (retryCount === maxRetries) {
@@ -123,25 +155,32 @@ This is an EDIT operation - preserve the original image structure and only modif
             const imageBuffer = Buffer.from(part.inlineData.data, 'base64');
             
             // Return PNG image
-            return new NextResponse(imageBuffer, {
-              status: 200,
+            return {
+              statusCode: 200,
               headers: {
+                'Access-Control-Allow-Origin': event.headers.origin || '*',
                 'Content-Type': 'image/png',
                 'Cache-Control': 'no-cache'
-              }
-            });
+              },
+              body: imageBuffer.toString('base64'),
+              isBase64Encoded: true
+            };
           }
         }
       }
     }
 
     // If no image generated, return error
-    return NextResponse.json(
-      { error: 'Failed to generate image from Gemini API' },
-      { status: 502 }
-    );
+    return {
+      statusCode: 502,
+      headers: {
+        'Access-Control-Allow-Origin': event.headers.origin || '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: 'Failed to generate image from Gemini API' }),
+    };
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Try-on generation error:', error);
     
     // Log detailed error for debugging
@@ -154,22 +193,13 @@ This is an EDIT operation - preserve the original image structure and only modif
       }
     }
     
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': event.headers.origin || '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: 'Internal server error', details: error.message }),
+    };
   }
-}
-
-// Set CORS headers
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '86400',
-    },
-  });
-}
+};
