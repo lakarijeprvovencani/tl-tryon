@@ -1,0 +1,28 @@
+name = "Virtual Try-On Widget"
+type = "theme"
+uid = "12e06687-85ce-c58f-6164-6b0f0705ee057865df61"
+
+[capabilities]
+network_access = true
+api_access = true
+block_progress = false
+
+[[settings.fields]]
+type = "single_line_text_field"
+name = "Widget Title"
+key = "widget_title"
+
+[[settings.fields]]
+type = "textarea"
+name = "Widget Description"
+key = "widget_description"
+
+[[settings.fields]]
+type = "checkbox"
+name = "Show Description"
+key = "show_description"
+
+[[settings.fields]]
+type = "checkbox"
+name = "Show Product Information"
+key = "show_product_info"

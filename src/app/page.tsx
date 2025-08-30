@@ -84,6 +84,10 @@ export default function Home() {
     setError(null);
     
     try {
+      // Gemini API očekuje samo čist Base64 string, bez 'data:image/jpeg;base64,'
+      // prefiksa koji FileReader dodaje. Ovde izdvajamo samo Base64 deo.
+      const userImageBase64 = userImage.split(',')[1];
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -91,7 +95,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           productName: selectedProduct.name,
-          userImageBase64: userImage,
+          userImageBase64: userImageBase64,
         }),
       });
 

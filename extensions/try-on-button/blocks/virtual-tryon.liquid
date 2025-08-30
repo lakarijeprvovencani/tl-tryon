@@ -1,0 +1,370 @@
+{% comment %}
+  Virtual Try-On Widget Block
+  This block displays a virtual try-on form and product information
+{% endcomment %}
+
+{% assign api_key = "AIzaSyBbf1j8tO10dxKh4iwg5ueYqm4uyUwJUK0" %}
+{% assign store_domain = "075997-f4.myshopify.com" %}
+{% assign widget_title = block.settings.widget_title | default: 'Virtual Try-On' %}
+{% assign widget_description = block.settings.widget_description | default: 'Uploaduj svoju sliku da vidiš kako ti stoji ovaj proizvod!' %}
+
+<div id="tl-vto" class="virtual-tryon-widget" 
+     data-api-key="{{ api_key | escape }}"
+     data-store-domain="{{ store_domain | escape }}"
+     data-product-id="{{ product.id }}"
+     data-product-title="{{ product.title | escape }}"
+     data-product-image="{{ product.featured_image | image_url }}"
+     data-variant-id="{{ product.selected_or_first_available_variant.id }}">
+  
+  <div class="tryon-container">
+    <h3 class="tryon-title">{{ widget_title }}</h3>
+    
+    {% if block.settings.show_description %}
+      <p class="tryon-description">{{ widget_description }}</p>
+    {% endif %}
+    
+    <div class="tryon-form">
+      <div class="upload-section">
+        <label for="photo-upload-{{ block.id }}" class="upload-label">
+          <span class="upload-icon">📷</span>
+          <span class="upload-text">Uploaduj svoju sliku</span>
+        </label>
+        <input type="file" 
+               id="photo-upload-{{ block.id }}" 
+               accept="image/*" 
+               class="photo-input" 
+               style="display: none;">
+      </div>
+      
+      <div class="preview-section" style="display: none;">
+        <img id="preview-image-{{ block.id }}" class="preview-image" alt="Photo preview" width="300" height="300">
+        <button type="button" class="try-on-btn" onclick="startVirtualTryOn('{{ block.id }}')">
+          Probaj proizvod
+        </button>
+      </div>
+      
+      <div class="result-section" style="display: none;">
+        <div class="result-container">
+          <img id="result-image-{{ block.id }}" class="result-image" alt="Virtual try-on result" width="400" height="500">
+          <div class="result-actions">
+            <button type="button" class="download-btn" onclick="downloadResult('{{ block.id }}')">
+              Preuzmi rezultat
+            </button>
+            <button type="button" class="reset-btn" onclick="resetTryOn('{{ block.id }}')">
+              Probaj ponovo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {% if block.settings.show_product_info %}
+      <div class="product-info">
+        <h4>{{ product.title }}</h4>
+        <img src="{{ product.featured_image | image_url: width: 100 }}" alt="{{ product.title }}" class="product-thumbnail" width="100" height="100">
+        <p class="product-price">{{ product.price | money }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.virtual-tryon-widget {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.tryon-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.tryon-description {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.upload-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #007cba;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.upload-label:hover {
+  background: #005a87;
+}
+
+.upload-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.preview-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.preview-image {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.try-on-btn {
+  padding: 0.75rem 1.5rem;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.try-on-btn:hover {
+  background: #218838;
+}
+
+.result-section {
+  text-align: center;
+}
+
+.result-image {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.download-btn, .reset-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.download-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.reset-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.product-info {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e1e5e9;
+  text-align: center;
+}
+
+.product-thumbnail {
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.product-price {
+  font-weight: bold;
+  color: #28a745;
+  font-size: 1.1rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Konfiguracija widget-a
+  const el = document.getElementById('tl-vto');
+  if (el) {
+    const cfg = {
+      apiKey: el.dataset.apiKey,
+      storeDomain: el.dataset.storeDomain,
+      productId: el.dataset.productId,
+      title: el.dataset.productTitle,
+      image: el.dataset.productImage,
+    };
+    console.log("Virtual Try-On config:", cfg);
+  }
+  
+  const blockId = '{{ block.id }}';
+  const fileInput = document.getElementById(`photo-upload-${blockId}`);
+  const previewSection = document.querySelector(`#preview-image-${blockId}`).parentElement;
+  const resultSection = document.querySelector(`.result-section`);
+  
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewImg = document.getElementById(`preview-image-${blockId}`);
+        previewImg.src = e.target.result;
+        previewSection.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+});
+
+function startVirtualTryOn(blockId) {
+  const widget = document.querySelector(`[data-product-id]`);
+  const apiKey = widget.dataset.apiKey;
+  const storeDomain = widget.dataset.storeDomain;
+  const productId = widget.dataset.productId;
+  const variantId = widget.dataset.variantId;
+  
+  // API ključ i store domain su hardcoded, ne treba proveravati
+  
+  const fileInput = document.getElementById(`photo-upload-${blockId}`);
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Molimo uploadujte sliku prvo.');
+    return;
+  }
+  
+  // Show loading state
+  const tryOnBtn = document.querySelector(`#preview-image-${blockId}`).nextElementSibling;
+  const originalText = tryOnBtn.textContent;
+  tryOnBtn.textContent = 'Obrađujem...';
+  tryOnBtn.disabled = true;
+  
+  // Convert image to base64 for easier transmission
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Image = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
+    
+    // Create form data as URL encoded
+    const formData = new URLSearchParams();
+    formData.append('photo', base64Image);
+    formData.append('productId', productId);
+    formData.append('variantId', variantId);
+    formData.append('apiKey', apiKey);
+    formData.append('storeDomain', storeDomain);
+    
+    const endpoint = 'https://quiet-maamoul-71d10e.netlify.app/.netlify/functions/generate';
+    fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Backend response:', data);
+        console.log('Generated image length:', data.generatedImage ? data.generatedImage.length : 'undefined');
+        console.log('Result URL:', data.resultUrl);
+        
+        if (data.success) {
+          const resultImg = document.getElementById(`result-image-${blockId}`);
+          
+          // Check if we have a real generated image
+          if (data.generatedImage && data.generatedImage.length > 100) {
+            // Use the real generated image from Gemini
+            resultImg.src = `data:image/jpeg;base64,${data.generatedImage}`;
+            console.log('Using real AI-generated image!');
+          } else if (data.resultUrl) {
+            // Fallback to resultUrl if no generated image
+            resultImg.src = data.resultUrl;
+            console.log('Using fallback resultUrl');
+          } else {
+            console.error('No image data received:', data);
+            alert('Nije primljena slika od AI-a. Pokušaj ponovo.');
+          }
+          
+          document.querySelector('.result-section').style.display = 'block';
+          document.querySelector('.preview-section').style.display = 'none';
+          tryOnBtn.textContent = originalText;
+          tryOnBtn.disabled = false;
+        } else {
+          alert('Greška: ' + data.message);
+          tryOnBtn.textContent = originalText;
+          tryOnBtn.disabled = false;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Došlo je do greške prilikom obrade zahteva.');
+        tryOnBtn.textContent = originalText;
+        tryOnBtn.disabled = false;
+      });
+  };
+  
+  // Start reading the file
+  reader.readAsDataURL(file);
+}
+
+function downloadResult(blockId) {
+  const resultImg = document.getElementById(`result-image-${blockId}`);
+  const link = document.createElement('a');
+  link.download = 'virtual-tryon-result.png';
+  link.href = resultImg.src;
+  link.click();
+}
+
+function resetTryOn(blockId) {
+  const fileInput = document.getElementById(`photo-upload-${blockId}`);
+  const previewSection = document.querySelector(`#preview-image-${blockId}`).parentElement;
+  const resultSection = document.querySelector(`.result-section`);
+  
+  fileInput.value = '';
+  previewSection.style.display = 'none';
+  resultSection.style.display = 'none';
+}
+</script>
+
+{% schema %}
+{
+  "name": "Virtual Try-On Widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "widget_title",
+      "label": "Widget Title",
+      "default": "Virtual Try-On"
+    },
+    {
+      "type": "textarea",
+      "id": "widget_description",
+      "label": "Widget Description",
+      "default": "Uploaduj svoju sliku da vidiš kako ti stoji ovaj proizvod!"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show Description",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_info",
+      "label": "Show Product Information",
+      "default": true
+    }
+  ]
+}
+{% endschema %}
