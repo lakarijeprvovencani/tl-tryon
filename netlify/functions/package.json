@@ -2,9 +2,10 @@
   "name": "netlify-functions",
   "version": "1.0.0",
   "description": "Netlify functions for Virtual Try-On app",
+  "type": "module",
   "main": "index.js",
   "dependencies": {
-    "@google/generative-ai": "^0.2.1"
+    "@google/generative-ai": "^0.24.1"
   },
   "devDependencies": {},
   "scripts": {

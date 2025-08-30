@@ -1,4 +1,5 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+// Use ES modules for Netlify
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Hardcoded configuration for now
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
@@ -6,7 +7,7 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-image-preview
 const GARMENT_DESC = "black plush tracksuit (jacket + pants)"; // Hardcoded for now
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   // Handle CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
